@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS prices (
     updated_at TIMESTAMPTZ DEFAULT now(),
     PRIMARY KEY (shop, dedup_key)
 );
+ALTER TABLE prices ADD COLUMN IF NOT EXISTS image_url TEXT;
 CREATE TABLE IF NOT EXISTS pipeline_runs (
     id SERIAL PRIMARY KEY,
     run_id TEXT, source TEXT, status TEXT, rows INT, message TEXT,
@@ -32,7 +33,7 @@ CREATE TABLE IF NOT EXISTS dq_reports (
 );
 """
 
-COLS = ["shop", "dedup_key", "source", "category", "brand", "capacity_gb", "interface", "name", "price", "url", "scraped_at"]
+COLS = ["shop", "dedup_key", "source", "category", "brand", "capacity_gb", "interface", "name", "price", "url", "image_url", "scraped_at"]
 
 
 def connect():
@@ -66,7 +67,7 @@ def upsert_prices(rows):
               ON CONFLICT (shop, dedup_key) DO UPDATE SET
                 source=EXCLUDED.source, category=EXCLUDED.category, brand=EXCLUDED.brand,
                 capacity_gb=EXCLUDED.capacity_gb, interface=EXCLUDED.interface, name=EXCLUDED.name,
-                price=EXCLUDED.price, url=EXCLUDED.url, scraped_at=EXCLUDED.scraped_at, updated_at=now()"""
+                price=EXCLUDED.price, url=EXCLUDED.url, image_url=EXCLUDED.image_url, scraped_at=EXCLUDED.scraped_at, updated_at=now()"""
     with connect() as c, c.cursor() as cur:
         execute_values(cur, sql, values)
         cur.execute("SELECT count(*) FROM prices")

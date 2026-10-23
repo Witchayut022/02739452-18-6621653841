@@ -8,6 +8,7 @@ import os
 import re
 import time
 from datetime import datetime, timezone
+from urllib.parse import urljoin
 
 import requests
 from bs4 import BeautifulSoup
@@ -66,6 +67,7 @@ def scrape_ihavecpu(max_pages=4):
                     "source": "ihavecpu", "shop": "ihavecpu", "category": category,
                     "name": it["name_th"].strip(), "price": price,
                     "url": f"https://www.ihavecpu.com/product/{it.get('product_id')}",
+                    "image": it.get("image"),
                     "scraped_at": _now(),
                 })
     return rows
@@ -92,8 +94,10 @@ def scrape_jib():
                     break
             if card is None or card.select_one(".price_total") is None:
                 continue
+            img = card.select_one("img.imgpspecial")
             rows.append({
                 "source": "jib", "shop": "jib", "category": category,
+                "image": urljoin("https://www.jib.co.th", img["src"]) if img and img.get("src") else None,
                 "name": a["title"].strip(), "price": _price(card.select_one(".price_total").get_text()),
                 "url": href, "scraped_at": _now(),
             })
@@ -110,6 +114,8 @@ def scrape_notebookspec(pages_per_category=None):
         for url in urls:
             soup = BeautifulSoup(_get(url, delay=3).text, "html.parser")  # Crawl-delay: 3
             h1 = soup.h1.get_text(strip=True) if soup.h1 else None
+            og = soup.find("meta", property="og:image")
+            image = og["content"] if og and og.get("content") else None
             if not h1:
                 continue
             for li in soup.select("li.shop-item"):
@@ -121,7 +127,7 @@ def scrape_notebookspec(pages_per_category=None):
                 price = _price(li.select_one(".price").get_text() if li.select_one(".price") else "")
                 rows.append({
                     "source": "notebookspec", "shop": shop, "category": category,
-                    "name": h1, "price": price, "url": url, "scraped_at": _now(),
+                    "name": h1, "price": price, "url": url, "image": image, "scraped_at": _now(),
                 })
     return rows
 

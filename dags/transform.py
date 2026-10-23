@@ -64,7 +64,7 @@ def normalise(row):
     return {
         "shop": row["shop"], "dedup_key": key, "source": row["source"], "category": cat, "brand": brand,
         "capacity_gb": cap, "interface": iface, "name": name[:300], "price": price, "url": row["url"],
-        "scraped_at": row["scraped_at"],
+        "image_url": row.get("image"), "scraped_at": row["scraped_at"],
     }
 
 

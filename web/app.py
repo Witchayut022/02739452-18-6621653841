@@ -24,7 +24,7 @@ def query(sql, params=()):
 
 @app.route("/")
 def index():
-    f = {k: request.args.get(k, "") for k in ("category", "shop", "brand", "q", "min_price", "max_price")}
+    f = {k: request.args.get(k, "") for k in ("category", "shop", "brand", "q", "min_price", "max_price", "sort")}
     where, params = ["1=1"], []
     for col in ("category", "shop", "brand"):
         if f[col]:
@@ -44,8 +44,9 @@ def index():
     kpi = (query(f"""SELECT count(*) AS n, round(avg(price)) AS avg_price, min(price) AS min_price,
                      max(price) AS max_price, count(DISTINCT shop) AS shops, count(DISTINCT brand) AS brands,
                      max(updated_at) AS updated FROM prices WHERE {w}""", params) or [{}])[0]
-    rows = query(f"""SELECT category, brand, name, capacity_gb, interface, shop, price, url
-                     FROM prices WHERE {w} ORDER BY price LIMIT 300""", params)
+    order = {"price_desc": "price DESC", "name": "name"}.get(f["sort"], "price")
+    rows = query(f"""SELECT category, brand, name, capacity_gb, interface, shop, price, url, image_url
+                     FROM prices WHERE {w} ORDER BY {order} LIMIT 300""", params)
     by_shop = query(f"""SELECT shop, category, round(avg(price)) AS v
                         FROM prices WHERE {w} GROUP BY shop, category ORDER BY shop""", params)
     shops = sorted({r["shop"] for r in by_shop})

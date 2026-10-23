@@ -21,6 +21,17 @@
  th,td{padding:6px 8px;border-bottom:1px solid #e5e9ee;text-align:left}
  td.n{text-align:right}
  .wrap{overflow-x:auto}
+ .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:16px}
+ .pcard{background:#fff;border-radius:10px;box-shadow:0 1px 3px #0001;overflow:hidden;display:flex;flex-direction:column}
+ .pimg{height:170px;background:#eef1f5;display:flex;align-items:center;justify-content:center;color:#99a}
+ .pimg img{max-width:100%;max-height:100%;object-fit:contain}
+ .pbody{padding:10px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
+ .tags span{display:inline-block;font-size:11px;padding:1px 7px;border-radius:10px;background:#e8eef6;color:#1f3a5f;margin-right:4px}
+ .tags .RAM{background:#fdeede;color:#8a4b0f}
+ .pname{font-size:13px;line-height:1.35;max-height:5.4em;overflow:hidden}
+ .specs{font-size:12px;color:#556}
+ .pprice{font-size:20px;font-weight:700;color:#1f3a5f;margin-top:auto}
+ .pbtn{display:block;text-align:center;background:#1f3a5f;color:#fff;text-decoration:none;border-radius:6px;padding:6px;font-size:13px}
 </style>
 </head>
 <body>
@@ -46,20 +57,31 @@
   <input name="q" placeholder="ค้นหาชื่อรุ่น" value="{{ f.q }}">
   <input name="min_price" placeholder="ราคาต่ำสุด" size="8" value="{{ f.min_price }}">
   <input name="max_price" placeholder="ราคาสูงสุด" size="8" value="{{ f.max_price }}">
+  <select name="sort">
+   <option value="">ราคา ต่ำ → สูง</option>
+   <option value="price_desc" {{ "selected" if f.sort=="price_desc" }}>ราคา สูง → ต่ำ</option>
+   <option value="name" {{ "selected" if f.sort=="name" }}>ชื่อสินค้า</option></select>
   <button>กรอง</button> <a href="/">ล้าง</a>
  </form>
 
  <div class="card"><b>ราคาเฉลี่ย (บาท) แยกตามร้านและหมวด</b>
   <div style="height:260px"><canvas id="c"></canvas></div></div>
 
- <div class="card wrap"><table>
-  <tr><th>หมวด</th><th>ยี่ห้อ</th><th>สินค้า</th><th>ความจุ (GB)</th><th>ชนิด</th><th>ร้าน</th><th>ราคา (บาท)</th></tr>
-  {% for r in rows %}<tr><td>{{ r.category }}</td><td>{{ r.brand }}</td>
-   <td><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.name }}</a></td>
-   <td class="n">{{ "{:,.0f}".format(r.capacity_gb) }}</td><td>{{ r.interface }}</td><td>{{ r.shop }}</td>
-   <td class="n">{{ "{:,.0f}".format(r.price) }}</td></tr>
-  {% else %}<tr><td colspan="7">ยังไม่มีข้อมูล - รัน DAG pc_parts_pipeline ใน Airflow ก่อน</td></tr>{% endfor %}
- </table></div>
+ <div class="grid">
+  {% for r in rows %}
+  <div class="pcard">
+   <div class="pimg">{% if r.image_url %}<img src="{{ r.image_url }}" alt="" loading="lazy" referrerpolicy="no-referrer"
+     onerror="this.replaceWith(document.createTextNode('ไม่มีรูป'))">{% else %}ไม่มีรูป{% endif %}</div>
+   <div class="pbody">
+    <div class="tags"><span class="{{ r.category }}">{{ r.category }}</span><span>{{ r.brand }}</span><span>{{ r.shop }}</span></div>
+    <div class="pname" title="{{ r.name }}">{{ r.name }}</div>
+    <div class="specs">ความจุ {{ "{:,.0f}".format(r.capacity_gb) if r.capacity_gb < 1024 else "{:g} TB".format(r.capacity_gb / 1024) }}{{ " GB" if r.capacity_gb < 1024 }} · {{ r.interface }}</div>
+    <div class="pprice">฿{{ "{:,.0f}".format(r.price) }}</div>
+    <a class="pbtn" href="{{ r.url }}" target="_blank" rel="noopener">ดูที่ร้าน {{ r.shop }}</a>
+   </div>
+  </div>
+  {% else %}<div class="card">ยังไม่มีข้อมูล - รัน DAG pc_parts_pipeline ใน Airflow ก่อน</div>{% endfor %}
+ </div>
 </main>
 <script>
  const d = {{ chart | tojson }};
