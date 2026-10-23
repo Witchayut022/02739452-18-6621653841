@@ -37,3 +37,7 @@ dags/   pc_parts_pipeline.py  scrapers.py  transform.py  db.py
 web/    app.py  templates/  Dockerfile
 docker-compose.yml  Dockerfile.airflow  requirements.txt  .env.example
 ```
+
+## ทดสอบกรณีแหล่งล่ม
+ตั้ง `SIMULATE_DOWN=notebookspec` (หรือ `jib`, `ihavecpu`, คั่นด้วยจุลภาค) ใน `.env` แล้ว `docker compose up -d airflow` จะจำลองให้แหล่งนั้นล้ม DAG ยังรวมแหล่งที่เหลือและโหลดต่อ
+ตั้ง `DQ_MIN_ROWS` สูงเกินจริงเพื่อดูเส้นทาง `quarantine`
