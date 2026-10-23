@@ -49,7 +49,7 @@ def index():
     per_page = 25
     pages = max(1, -(-int(kpi.get("n") or 0) // per_page))
     page = min(max(int(request.args.get("page", 1)) if request.args.get("page", "1").isdigit() else 1, 1), pages)
-    rows = query(f"""SELECT category, brand, name, capacity_gb, interface, shop, price, url, image_url
+    rows = query(f"""SELECT category, brand, name, capacity_gb, interface, shop, source, price, url, image_url
                      FROM prices WHERE {w} ORDER BY {order}, name LIMIT {per_page} OFFSET {(page - 1) * per_page}""", params)
     base_args = {k: v for k, v in request.args.items() if k != "page" and v}
     by_shop = query(f"""SELECT shop, category, round(avg(price)) AS v

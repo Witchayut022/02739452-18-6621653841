@@ -21,20 +21,27 @@
  th,td{padding:6px 8px;border-bottom:1px solid #e5e9ee;text-align:left}
  td.n{text-align:right}
  .wrap{overflow-x:auto}
- .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:16px}
- .pcard{background:#fff;border-radius:10px;box-shadow:0 1px 3px #0001;overflow:hidden;display:flex;flex-direction:column}
- .pimg{height:170px;background:#eef1f5;display:flex;align-items:center;justify-content:center;color:#99a}
+ .grid{display:grid;grid-template-columns:repeat(5,1fr);gap:24px;margin:8px 0 24px}
+ @media (max-width:1500px){.grid{grid-template-columns:repeat(4,1fr)}}
+ @media (max-width:1150px){.grid{grid-template-columns:repeat(3,1fr)}}
+ @media (max-width:820px){.grid{grid-template-columns:repeat(2,1fr);gap:16px}}
+ @media (max-width:520px){.grid{grid-template-columns:1fr}}
+ .pcard{background:#fff;border-radius:12px;box-shadow:0 2px 8px #0001;overflow:hidden;display:flex;flex-direction:column;transition:box-shadow .15s,transform .15s}
+ .pcard:hover{box-shadow:0 6px 18px #0002;transform:translateY(-2px)}
+ .pimg{height:230px;background:#fff;border-bottom:1px solid #eef1f5;display:flex;align-items:center;justify-content:center;color:#99a;padding:14px}
  .pimg img{max-width:100%;max-height:100%;object-fit:contain}
- .pbody{padding:10px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
- .tags span{display:inline-block;font-size:11px;padding:1px 7px;border-radius:10px;background:#e8eef6;color:#1f3a5f;margin-right:4px}
+ .pbody{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px;flex:1}
+ .tags span{display:inline-block;font-size:12px;padding:2px 9px;border-radius:12px;background:#e8eef6;color:#1f3a5f;margin:0 5px 4px 0}
  .tags .RAM{background:#fdeede;color:#8a4b0f}
- .pname{font-size:13px;line-height:1.35;max-height:5.4em;overflow:hidden}
- .specs{font-size:12px;color:#556}
- .pprice{font-size:20px;font-weight:700;color:#1f3a5f;margin-top:auto}
- .pager{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:8px 0 24px}
- .pager a,.pager span{padding:6px 12px;border-radius:6px;background:#fff;box-shadow:0 1px 3px #0001;text-decoration:none;color:#1f3a5f}
- .pager .cur{background:#1f3a5f;color:#fff}.pager .dis{color:#aab}
- .pbtn{display:block;text-align:center;background:#1f3a5f;color:#fff;text-decoration:none;border-radius:6px;padding:6px;font-size:13px}
+ .pname{font-size:15px;line-height:1.45;min-height:4.4em;max-height:4.4em;overflow:hidden}
+ .specs{font-size:13px;color:#556}
+ .pprice{font-size:24px;font-weight:700;color:#1f3a5f;margin-top:auto}
+ .pager{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:16px 0 8px}
+ .pager a,.pager span{min-width:42px;text-align:center;padding:10px 16px;border-radius:8px;background:#fff;box-shadow:0 1px 4px #0002;text-decoration:none;color:#1f3a5f;font-size:15px}
+ .pager a:hover{background:#e8eef6}
+ .pager .cur{background:#1f3a5f;color:#fff}.pager .dis{color:#aab;box-shadow:none;background:transparent}
+ .pbtn{display:block;text-align:center;background:#1f3a5f;color:#fff;text-decoration:none;border-radius:8px;padding:10px;font-size:14px}
+ .pbtn:hover{background:#2c5282}
 </style>
 </head>
 <body>
@@ -81,7 +88,7 @@
     <div class="pname" title="{{ r.name }}">{{ r.name }}</div>
     <div class="specs">ความจุ {{ "{:,.0f}".format(r.capacity_gb) if r.capacity_gb < 1024 else "{:g} TB".format(r.capacity_gb / 1024) }}{{ " GB" if r.capacity_gb < 1024 }} · {{ r.interface }}</div>
     <div class="pprice">฿{{ "{:,.0f}".format(r.price) }}</div>
-    <a class="pbtn" href="{{ r.url }}" target="_blank" rel="noopener">ดูที่ร้าน {{ r.shop }}</a>
+    <a class="pbtn" href="{{ r.url }}" target="_blank" rel="noopener">{% if r.source == r.shop %}ดูที่ร้าน {{ r.shop }}{% else %}ดูรายละเอียดที่ {{ r.source }}{% endif %}</a>
    </div>
   </div>
   {% else %}<div class="card">ยังไม่มีข้อมูล - รัน DAG pc_parts_pipeline ใน Airflow ก่อน</div>{% endfor %}
@@ -98,7 +105,7 @@
   {% if page < pages %}<a href="?{{ (base_args | dict_update({'page': page+1})) | urlencode }}">ถัดไป »</a>{% else %}<span class="dis">ถัดไป »</span>{% endif %}
  </nav>
  {% endif %}
- <p style="color:#667;text-align:center">หน้า {{ page }} / {{ pages }}</p>
+ <p style="color:#667;text-align:center;margin:8px 0 28px">หน้า {{ page }} / {{ pages }}</p>
 </main>
 <script>
  const d = {{ chart | tojson }};
