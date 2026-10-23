@@ -25,7 +25,7 @@ def query(sql, params=()):
 @app.route("/")
 def index():
     f = {k: request.args.get(k, "") for k in ("category", "shop", "brand", "q", "min_price", "max_price", "sort")}
-    where, params = ["1=1"], []
+    where, params = ["image_url IS NOT NULL AND image_url <> ''"], []  # show only products with a picture
     for col in ("category", "shop", "brand"):
         if f[col]:
             where.append(f"{col} = %s")
