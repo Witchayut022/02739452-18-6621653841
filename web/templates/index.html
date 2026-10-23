@@ -49,7 +49,7 @@
   <button>กรอง</button> <a href="/">ล้าง</a>
  </form>
 
- <div class="card"><b>ราคาเฉลี่ยต่อ 100 GB แยกตามร้าน (บาท)</b>
+ <div class="card"><b>ราคาเฉลี่ย (บาท) แยกตามร้านและหมวด</b>
   <div style="height:260px"><canvas id="c"></canvas></div></div>
 
  <div class="card wrap"><table>
@@ -64,8 +64,8 @@
 <script>
  const d = {{ chart | tojson }};
  new Chart(document.getElementById("c"), {type:"bar",
-  data:{labels:d.labels, datasets:[{label:"บาท / 100GB", data:d.values, backgroundColor:"#3b7dd8"}]},
-  options:{maintainAspectRatio:false, plugins:{legend:{display:false}}}});
+  data:{labels:d.labels, datasets:d.datasets.map((s,i)=>({...s, backgroundColor:["#3b7dd8","#e0883a"][i]}))},
+  options:{maintainAspectRatio:false}});
 </script>
 </body>
 </html>

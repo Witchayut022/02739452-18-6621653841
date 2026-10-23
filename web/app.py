@@ -46,14 +46,17 @@ def index():
                      max(updated_at) AS updated FROM prices WHERE {w}""", params) or [{}])[0]
     rows = query(f"""SELECT category, brand, name, capacity_gb, interface, shop, price, url
                      FROM prices WHERE {w} ORDER BY price LIMIT 300""", params)
-    by_shop = query(f"""SELECT shop, round(avg(price / NULLIF(capacity_gb,0) * 100)::numeric, 1) AS v
-                        FROM prices WHERE {w} GROUP BY shop ORDER BY v""", params)
+    by_shop = query(f"""SELECT shop, category, round(avg(price)) AS v
+                        FROM prices WHERE {w} GROUP BY shop, category ORDER BY shop""", params)
+    shops = sorted({r["shop"] for r in by_shop})
+    datasets = [{"label": c, "data": [next((float(r["v"] or 0) for r in by_shop if r["shop"] == s and r["category"] == c), 0)
+                                      for s in shops]} for c in ("SSD", "RAM")]
     opts = {
         "shops": [r["shop"] for r in query("SELECT DISTINCT shop FROM prices ORDER BY 1")],
         "brands": [r["brand"] for r in query("SELECT DISTINCT brand FROM prices ORDER BY 1")],
     }
     return render_template("index.html", kpi=kpi, rows=rows, f=f, opts=opts,
-                           chart={"labels": [r["shop"] for r in by_shop], "values": [float(r["v"] or 0) for r in by_shop]})
+                           chart={"labels": shops, "datasets": datasets})
 
 
 @app.route("/status")

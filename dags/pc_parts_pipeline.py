@@ -23,6 +23,8 @@ def _init(**_):
 
 def _extract(source, run_id=None, **_):
     try:
+        if source in os.getenv("SIMULATE_DOWN", "").split(","):  # demo: pretend this source is down
+            raise ConnectionError(f"simulated outage of {source}")
         rows = scrapers.SCRAPERS[source]()
     except Exception as exc:  # source down -> task fails, downstream still runs (trigger_rule=all_done)
         db.log_status(run_id, source, "failed", 0, repr(exc))
