@@ -7,8 +7,12 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
  body{font-family:system-ui,"Noto Sans Thai",sans-serif;margin:0;background:#f4f6f8;color:#1c2733}
- header{background:#1f3a5f;color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
- header a{color:#cfe3ff;margin-left:16px}
+ header{background:#1f3a5f;color:#fff;padding:22px 32px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 8px #0002}
+ header strong{font-size:24px;letter-spacing:.2px}
+ header nav{display:flex;gap:10px}
+ header a{color:#e3eefc;text-decoration:none;font-size:16px;padding:9px 18px;border-radius:8px;margin:0;transition:background .15s}
+ header a:hover{background:#ffffff26;color:#fff}
+ @media (max-width:520px){header{flex-direction:column;align-items:flex-start;gap:12px;padding:16px 20px}header strong{font-size:20px}header a{padding:7px 14px;font-size:15px}}
  main{padding:20px 32px;max-width:none;margin:0}
  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
  .kpi{background:#fff;border-radius:8px;padding:12px 16px;box-shadow:0 1px 3px #0001}
