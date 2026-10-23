@@ -46,7 +46,7 @@ def index():
                      max(price) AS max_price, count(DISTINCT shop) AS shops, count(DISTINCT brand) AS brands,
                      max(updated_at) AS updated FROM prices WHERE {w}""", params) or [{}])[0]
     order = {"price_desc": "price DESC", "name": "name"}.get(f["sort"], "price")
-    per_page = 24
+    per_page = 25
     pages = max(1, -(-int(kpi.get("n") or 0) // per_page))
     page = min(max(int(request.args.get("page", 1)) if request.args.get("page", "1").isdigit() else 1, 1), pages)
     rows = query(f"""SELECT category, brand, name, capacity_gb, interface, shop, price, url, image_url
