@@ -1,0 +1,62 @@
+x-airflow-env: &airflow-env
+  AIRFLOW__CORE__EXECUTOR: LocalExecutor
+  AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+  AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/airflow
+  AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
+  DATA_DB_HOST: postgres
+  DATA_DB_NAME: pcparts
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  DQ_MIN_ROWS: ${DQ_MIN_ROWS:-100}
+  NSPEC_PAGES_PER_CATEGORY: ${NSPEC_PAGES_PER_CATEGORY:-30}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: pcparts
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d pcparts"]
+      interval: 5s
+      retries: 10
+
+  airflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment: *airflow-env
+    volumes:
+      - ./dags:/opt/airflow/dags
+    ports:
+      - "8080:8080"
+    command: >
+      bash -c "airflow db migrate &&
+      airflow users create --username ${AIRFLOW_ADMIN_USER} --password ${AIRFLOW_ADMIN_PASSWORD}
+      --firstname a --lastname b --role Admin --email admin@example.com || true;
+      airflow scheduler & exec airflow webserver"
+
+  web:
+    build: ./web
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATA_DB_HOST: postgres
+      DATA_DB_NAME: pcparts
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5000:5000"
+
+volumes:
+  pgdata:

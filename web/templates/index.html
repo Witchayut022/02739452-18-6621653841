@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PC Parts Price Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+ body{font-family:system-ui,"Noto Sans Thai",sans-serif;margin:0;background:#f4f6f8;color:#1c2733}
+ header{background:#1f3a5f;color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center}
+ header a{color:#cfe3ff;margin-left:16px}
+ main{padding:20px 24px;max-width:1200px;margin:auto}
+ .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+ .kpi{background:#fff;border-radius:8px;padding:12px 16px;box-shadow:0 1px 3px #0001}
+ .kpi b{display:block;font-size:22px}
+ form{background:#fff;padding:12px 16px;border-radius:8px;display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+ input,select,button{padding:6px 8px;font:inherit}
+ button{background:#1f3a5f;color:#fff;border:0;border-radius:4px;cursor:pointer}
+ .card{background:#fff;border-radius:8px;padding:12px 16px;margin-bottom:16px;box-shadow:0 1px 3px #0001}
+ table{width:100%;border-collapse:collapse;font-size:14px}
+ th,td{padding:6px 8px;border-bottom:1px solid #e5e9ee;text-align:left}
+ td.n{text-align:right}
+ .wrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<header><strong>ราคา SSD / RAM จากหลายร้าน</strong><nav><a href="/">Dashboard</a><a href="/status">Pipeline status</a></nav></header>
+<main>
+ <div class="kpis">
+  <div class="kpi">รายการทั้งหมด<b>{{ kpi.n or 0 }}</b></div>
+  <div class="kpi">ราคาเฉลี่ย (บาท)<b>{{ "{:,.0f}".format(kpi.avg_price) if kpi.avg_price else "-" }}</b></div>
+  <div class="kpi">ถูกสุด<b>{{ "{:,.0f}".format(kpi.min_price) if kpi.min_price else "-" }}</b></div>
+  <div class="kpi">แพงสุด<b>{{ "{:,.0f}".format(kpi.max_price) if kpi.max_price else "-" }}</b></div>
+  <div class="kpi">จำนวนร้าน<b>{{ kpi.shops or 0 }}</b></div>
+  <div class="kpi">จำนวนยี่ห้อ<b>{{ kpi.brands or 0 }}</b></div>
+ </div>
+ <p style="color:#667">อัปเดตล่าสุด: {{ kpi.updated.strftime("%Y-%m-%d %H:%M") if kpi.updated else "-" }}</p>
+
+ <form method="get">
+  <select name="category"><option value="">ทุกหมวด</option>
+   {% for c in ["SSD","RAM"] %}<option {{ "selected" if f.category==c }}>{{ c }}</option>{% endfor %}</select>
+  <select name="shop"><option value="">ทุกร้าน</option>
+   {% for s in opts.shops %}<option {{ "selected" if f.shop==s }}>{{ s }}</option>{% endfor %}</select>
+  <select name="brand"><option value="">ทุกยี่ห้อ</option>
+   {% for b in opts.brands %}<option {{ "selected" if f.brand==b }}>{{ b }}</option>{% endfor %}</select>
+  <input name="q" placeholder="ค้นหาชื่อรุ่น" value="{{ f.q }}">
+  <input name="min_price" placeholder="ราคาต่ำสุด" size="8" value="{{ f.min_price }}">
+  <input name="max_price" placeholder="ราคาสูงสุด" size="8" value="{{ f.max_price }}">
+  <button>กรอง</button> <a href="/">ล้าง</a>
+ </form>
+
+ <div class="card"><b>ราคาเฉลี่ยต่อ 100 GB แยกตามร้าน (บาท)</b>
+  <div style="height:260px"><canvas id="c"></canvas></div></div>
+
+ <div class="card wrap"><table>
+  <tr><th>หมวด</th><th>ยี่ห้อ</th><th>สินค้า</th><th>ความจุ (GB)</th><th>ชนิด</th><th>ร้าน</th><th>ราคา (บาท)</th></tr>
+  {% for r in rows %}<tr><td>{{ r.category }}</td><td>{{ r.brand }}</td>
+   <td><a href="{{ r.url }}" target="_blank" rel="noopener">{{ r.name }}</a></td>
+   <td class="n">{{ "{:,.0f}".format(r.capacity_gb) }}</td><td>{{ r.interface }}</td><td>{{ r.shop }}</td>
+   <td class="n">{{ "{:,.0f}".format(r.price) }}</td></tr>
+  {% else %}<tr><td colspan="7">ยังไม่มีข้อมูล - รัน DAG pc_parts_pipeline ใน Airflow ก่อน</td></tr>{% endfor %}
+ </table></div>
+</main>
+<script>
+ const d = {{ chart | tojson }};
+ new Chart(document.getElementById("c"), {type:"bar",
+  data:{labels:d.labels, datasets:[{label:"บาท / 100GB", data:d.values, backgroundColor:"#3b7dd8"}]},
+  options:{maintainAspectRatio:false, plugins:{legend:{display:false}}}});
+</script>
+</body>
+</html>
