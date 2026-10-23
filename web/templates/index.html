@@ -31,6 +31,9 @@
  .pname{font-size:13px;line-height:1.35;max-height:5.4em;overflow:hidden}
  .specs{font-size:12px;color:#556}
  .pprice{font-size:20px;font-weight:700;color:#1f3a5f;margin-top:auto}
+ .pager{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:8px 0 24px}
+ .pager a,.pager span{padding:6px 12px;border-radius:6px;background:#fff;box-shadow:0 1px 3px #0001;text-decoration:none;color:#1f3a5f}
+ .pager .cur{background:#1f3a5f;color:#fff}.pager .dis{color:#aab}
  .pbtn{display:block;text-align:center;background:#1f3a5f;color:#fff;text-decoration:none;border-radius:6px;padding:6px;font-size:13px}
 </style>
 </head>
@@ -67,6 +70,7 @@
  <div class="card"><b>ราคาเฉลี่ย (บาท) แยกตามร้านและหมวด</b>
   <div style="height:260px"><canvas id="c"></canvas></div></div>
 
+ <p style="color:#667">แสดง {{ rows|length }} จาก {{ kpi.n or 0 }} รายการ</p>
  <div class="grid">
   {% for r in rows %}
   <div class="pcard">
@@ -82,6 +86,19 @@
   </div>
   {% else %}<div class="card">ยังไม่มีข้อมูล - รัน DAG pc_parts_pipeline ใน Airflow ก่อน</div>{% endfor %}
  </div>
+
+ {% if pages > 1 %}
+ <nav class="pager">
+  {% if page > 1 %}<a href="?{{ (base_args | dict_update({'page': page-1})) | urlencode }}">« ก่อนหน้า</a>{% else %}<span class="dis">« ก่อนหน้า</span>{% endif %}
+  {% for p in range(1, pages+1) %}
+   {% if p == page %}<span class="cur">{{ p }}</span>
+   {% elif p == 1 or p == pages or (p - page)|abs <= 2 %}<a href="?{{ (base_args | dict_update({'page': p})) | urlencode }}">{{ p }}</a>
+   {% elif (p - page)|abs == 3 %}<span class="dis">…</span>{% endif %}
+  {% endfor %}
+  {% if page < pages %}<a href="?{{ (base_args | dict_update({'page': page+1})) | urlencode }}">ถัดไป »</a>{% else %}<span class="dis">ถัดไป »</span>{% endif %}
+ </nav>
+ {% endif %}
+ <p style="color:#667;text-align:center">หน้า {{ page }} / {{ pages }}</p>
 </main>
 <script>
  const d = {{ chart | tojson }};

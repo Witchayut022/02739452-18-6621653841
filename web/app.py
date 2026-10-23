@@ -5,6 +5,7 @@ import psycopg2.extras
 from flask import Flask, render_template, request
 
 app = Flask(__name__)
+app.jinja_env.filters["dict_update"] = lambda d, extra: {**d, **extra}
 
 
 def query(sql, params=()):
@@ -45,8 +46,12 @@ def index():
                      max(price) AS max_price, count(DISTINCT shop) AS shops, count(DISTINCT brand) AS brands,
                      max(updated_at) AS updated FROM prices WHERE {w}""", params) or [{}])[0]
     order = {"price_desc": "price DESC", "name": "name"}.get(f["sort"], "price")
+    per_page = 24
+    pages = max(1, -(-int(kpi.get("n") or 0) // per_page))
+    page = min(max(int(request.args.get("page", 1)) if request.args.get("page", "1").isdigit() else 1, 1), pages)
     rows = query(f"""SELECT category, brand, name, capacity_gb, interface, shop, price, url, image_url
-                     FROM prices WHERE {w} ORDER BY {order} LIMIT 300""", params)
+                     FROM prices WHERE {w} ORDER BY {order}, name LIMIT {per_page} OFFSET {(page - 1) * per_page}""", params)
+    base_args = {k: v for k, v in request.args.items() if k != "page" and v}
     by_shop = query(f"""SELECT shop, category, round(avg(price)) AS v
                         FROM prices WHERE {w} GROUP BY shop, category ORDER BY shop""", params)
     shops = sorted({r["shop"] for r in by_shop})
@@ -56,7 +61,7 @@ def index():
         "shops": [r["shop"] for r in query("SELECT DISTINCT shop FROM prices ORDER BY 1")],
         "brands": [r["brand"] for r in query("SELECT DISTINCT brand FROM prices ORDER BY 1")],
     }
-    return render_template("index.html", kpi=kpi, rows=rows, f=f, opts=opts,
+    return render_template("index.html", kpi=kpi, rows=rows, f=f, opts=opts, page=page, pages=pages, base_args=base_args,
                            chart={"labels": shops, "datasets": datasets})
 
 
